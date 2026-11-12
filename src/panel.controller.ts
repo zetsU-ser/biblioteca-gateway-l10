@@ -1,6 +1,16 @@
 import {
-  Body, Controller, Delete, ForbiddenException, Get, Headers, HttpException, Param,
-  ParseIntPipe, Post, ServiceUnavailableException, UnauthorizedException,
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Headers,
+  HttpException,
+  Param,
+  ParseIntPipe,
+  Post,
+  ServiceUnavailableException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { verificar, tieneScope } from './auth/verificador';
 
@@ -17,7 +27,9 @@ export class PanelController {
     }
 
     if (!tieneScope(claims, 'biblioteca/libros.leer')) {
-      throw new ForbiddenException('te falta el permiso biblioteca/libros.leer');
+      throw new ForbiddenException(
+        'te falta el permiso biblioteca/libros.leer',
+      );
     }
   }
 
@@ -38,7 +50,9 @@ export class PanelController {
         method: metodo,
         headers: {
           authorization: authorization!,
-          ...(cuerpo !== undefined ? { 'Content-Type': 'application/json' } : {}),
+          ...(cuerpo !== undefined
+            ? { 'Content-Type': 'application/json' }
+            : {}),
         },
         body: cuerpo !== undefined ? JSON.stringify(cuerpo) : undefined,
       });
@@ -49,7 +63,10 @@ export class PanelController {
     // El codigo del BFF se respeta TAL CUAL: 400, 403, 404, 409 y 503 siguen siendo eso.
     const respuestaCuerpo: unknown = await respuesta.json();
     if (!respuesta.ok) {
-      throw new HttpException(respuestaCuerpo as Record<string, unknown>, respuesta.status);
+      throw new HttpException(
+        respuestaCuerpo as Record<string, unknown>,
+        respuesta.status,
+      );
     }
     return respuestaCuerpo;
   }
@@ -64,12 +81,23 @@ export class PanelController {
     return this.haciaElBff('GET', '/panel/todos', authorization);
   }
 
+  // L10: el panel en vivo. El gateway revisa el token y el scope; el rol (bibliotecarios) lo revisa el BFF.
+  @Get('en-vivo')
+  async enVivo(@Headers('authorization') authorization?: string) {
+    return this.haciaElBff('GET', '/panel/en-vivo', authorization);
+  }
+
   @Post('prestamos')
   async prestar(
     @Headers('authorization') authorization?: string,
     @Body() cuerpo?: { libroId?: unknown },
   ) {
-    return this.haciaElBff('POST', '/panel/prestamos', authorization, cuerpo ?? {});
+    return this.haciaElBff(
+      'POST',
+      '/panel/prestamos',
+      authorization,
+      cuerpo ?? {},
+    );
   }
 
   @Delete('prestamos/:id')
